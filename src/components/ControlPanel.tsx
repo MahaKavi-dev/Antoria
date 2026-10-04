@@ -26,8 +26,18 @@ const TABS: [Tab, string][] = [['world', 'World'], ['colony', 'Colony'], ['trail
 const FOODS: [FoodStyle, string][] = [['mixed', 'Mixed'], ['berries', 'Berries'], ['seeds', 'Seeds'], ['crumbs', 'Crumbs'], ['apples', 'Apples']]
 const fmt = (s: number) => `${String((s / 60) | 0).padStart(2, '0')}:${String(s % 60 | 0).padStart(2, '0')}`
 
-export function ControlPanel({ engine }: { engine: Engine }) {
-  const [tab, setTab] = useState<Tab>('world')
+export function ControlPanel({
+  engine,
+  tab: controlledTab,
+  onTabChange,
+}: {
+  engine: Engine
+  tab?: Tab
+  onTabChange?: (t: Tab) => void
+}) {
+  const [internalTab, setInternalTab] = useState<Tab>('world')
+  const tab = controlledTab ?? internalTab
+  const setTab = onTabChange ?? setInternalTab
   const [p, setP] = useState<Params>({ ...engine.params })
   const [scenario, setScenario] = useState(engine.scenario.id)
   const [stats, setStats] = useState(engine.stats())
@@ -38,6 +48,18 @@ export function ControlPanel({ engine }: { engine: Engine }) {
   useEffect(() => {
     const id = setInterval(() => { setStats(engine.stats()); setInfo(engine.info()); setLog(engine.log) }, 250)
     return () => clearInterval(id)
+  }, [engine])
+
+  // Immediately update inspector when an object is inspected or deselected
+  useEffect(() => {
+    const prev = engine.onInspect
+    engine.onInspect = () => {
+      prev?.()
+      setInfo(engine.info())
+    }
+    return () => {
+      engine.onInspect = prev
+    }
   }, [engine])
 
   const set = <K extends keyof Params>(k: K, v: Params[K]) => {
@@ -139,6 +161,23 @@ export function ControlPanel({ engine }: { engine: Engine }) {
           {!info && <p className="hint">Pick the Inspect tool and click a food pile or the colony to see details.</p>}
           {log.length > 0 && <ul className="log" aria-live="polite">{log.map((l, i) => <li key={i}>{l}</li>)}</ul>}
         </>
+      )}
+
+      {tab !== 'stats' && info && (
+        <div className="info" aria-live="polite">
+          {info.kind === 'food' && <>
+            <strong>Food source</strong>
+            <span>Amount: {info.amount}</span>
+            <span>Ants nearby: {info.nearby}</span>
+            <span>Distance from colony: {info.distance}px</span>
+          </>}
+          {info.kind === 'nest' && <>
+            <strong>Colony</strong>
+            <span>Ants out foraging: {info.out} of {info.total}</span>
+            <span>Food stored: {info.stored}</span>
+          </>}
+          {info.kind === 'gone' && <strong>That food source is used up.</strong>}
+        </div>
       )}
     </aside>
   )

@@ -1,11 +1,35 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Engine, Tool } from '../simulation/Engine'
 
 const TOOLS: [Tool, string][] = [['inspect', 'Inspect'], ['food', 'Food'], ['wall', 'Wall'], ['erase', 'Erase']]
 
-export function Toolbar({ engine, started, onStart }: { engine: Engine; started: boolean; onStart: () => void }) {
-  const [tool, setTool] = useState<Tool>(engine.tool)
+export function Toolbar({
+  engine,
+  started,
+  onStart,
+  tool: controlledTool,
+  onToolChange,
+}: {
+  engine: Engine
+  started: boolean
+  onStart: () => void
+  tool?: Tool
+  onToolChange?: (t: Tool) => void
+}) {
+  const [internalTool, setInternalTool] = useState<Tool>(engine.tool)
+  const currentTool = controlledTool ?? internalTool
   const [paused, setPaused] = useState(false)
+
+  useEffect(() => {
+    if (controlledTool) setInternalTool(controlledTool)
+  }, [controlledTool])
+
+  const selectTool = (t: Tool) => {
+    engine.tool = t
+    setInternalTool(t)
+    onToolChange?.(t)
+  }
+
   return (
     <div className="toolbar">
       <div className="row" role="group" aria-label="Playback">
@@ -18,7 +42,7 @@ export function Toolbar({ engine, started, onStart }: { engine: Engine; started:
       </div>
       <div className="row" role="group" aria-label="Tool">
         {TOOLS.map(([t, name]) => (
-          <button key={t} aria-pressed={tool === t} onClick={() => { engine.tool = t; setTool(t) }}>{name}</button>
+          <button key={t} aria-pressed={currentTool === t} onClick={() => selectTool(t)}>{name}</button>
         ))}
       </div>
     </div>

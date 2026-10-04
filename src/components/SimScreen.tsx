@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import type { Engine } from '../simulation/Engine'
+import { useEffect, useState } from 'react'
+import type { Engine, Tool } from '../simulation/Engine'
 import { SimulationCanvas } from './SimulationCanvas'
 import { ControlPanel } from './ControlPanel'
 import { StatsStrip } from './StatsStrip'
@@ -8,7 +8,30 @@ import { HelpPanel } from './HelpPanel'
 
 export function SimScreen({ engine, onHome }: { engine: Engine; onHome: () => void }) {
   const [started, setStarted] = useState(false)
+  const [tool, setTool] = useState<Tool>(engine.tool)
+  const [tab, setTab] = useState<'world' | 'colony' | 'trails' | 'stats'>('world')
   const start = () => { engine.paused = false; setStarted(true) }
+
+  const handleToolChange = (t: Tool) => {
+    setTool(t)
+    if (t === 'inspect') {
+      setTab('stats')
+    }
+  }
+
+  useEffect(() => {
+    const prev = engine.onInspect
+    engine.onInspect = () => {
+      prev?.()
+      if (engine.selected) {
+        setTab('stats')
+      }
+    }
+    return () => {
+      engine.onInspect = prev
+    }
+  }, [engine])
+
   return (
     <main>
       <header className="bar">
@@ -27,9 +50,9 @@ export function SimScreen({ engine, onHome }: { engine: Engine; onHome: () => vo
               </div>
             )}
           </div>
-          <Toolbar engine={engine} started={started} onStart={start} />
+          <Toolbar engine={engine} started={started} onStart={start} tool={tool} onToolChange={handleToolChange} />
         </div>
-        <ControlPanel engine={engine} />
+        <ControlPanel engine={engine} tab={tab} onTabChange={setTab} />
       </div>
     </main>
   )

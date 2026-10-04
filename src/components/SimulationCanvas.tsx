@@ -25,16 +25,22 @@ export function SimulationCanvas({ engine }: { engine: Engine }) {
     return () => cancelAnimationFrame(raf)
   }, [engine])
 
-  const paint = (e: PointerEvent<HTMLCanvasElement>) =>
-    engine.paint(e.clientX, e.clientY, e.currentTarget.getBoundingClientRect())
+  const paint = (e: PointerEvent<HTMLCanvasElement>) => {
+    const cv = ref.current
+    if (!cv) return
+    engine.paint(e.clientX, e.clientY, cv.getBoundingClientRect())
+  }
 
   return (
     <canvas
       ref={ref}
       className="sim"
       aria-label="Ant colony simulation"
-      onPointerDown={(e) => { e.currentTarget.setPointerCapture(e.pointerId); paint(e) }}
-      onPointerMove={(e) => { if (e.buttons) paint(e) }}
+      onPointerDown={(e) => {
+        try { e.currentTarget.setPointerCapture(e.pointerId) } catch {}
+        paint(e)
+      }}
+      onPointerMove={(e) => { if (e.buttons && engine.tool !== 'inspect') paint(e) }}
     />
   )
 }

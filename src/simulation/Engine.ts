@@ -53,6 +53,7 @@ export class Engine {
   shortcutOpen = false
   gate = { shortcut: 0, around: 0 }
   selected: { kind: 'food' | 'nest'; x: number; y: number } | null = null
+  onInspect?: () => void
   wall!: Uint8Array
   food!: Uint8Array
   toHome!: PheromoneGrid
@@ -84,6 +85,7 @@ export class Engine {
     this.history = []
     this.avgTrip = 0
     this.selected = null
+    this.onInspect?.()
     this.shortcutOpen = false
     this.gate = { shortcut: 0, around: 0 }
     for (let i = 0; i < Math.min(START_ANTS, this.params.ants); i++) this.ants.push(new Ant(this.NX, this.NY))
@@ -118,6 +120,8 @@ export class Engine {
   clear() {
     this.wall.fill(0)
     this.food.fill(0)
+    this.selected = null
+    this.onInspect?.()
   }
 
   syncAnts() {
@@ -274,9 +278,14 @@ export class Engine {
     this.shortcutOpen = true
   }
 
-  private inspect(x: number, y: number) {
-    if (Math.hypot(x - this.NX, y - this.NY) <= this.NR + 2) this.selected = { kind: 'nest', x, y }
-    else this.selected = this.patchAt(x, y) ? { kind: 'food', x, y } : null
+  inspect(x: number, y: number) {
+    if (Math.hypot(x - this.NX, y - this.NY) <= this.NR + 2) {
+      this.selected = { kind: 'nest', x: this.NX, y: this.NY }
+    } else {
+      const p = this.patchAt(x, y)
+      this.selected = p ? { kind: 'food', x: p.cx | 0, y: p.cy | 0 } : null
+    }
+    this.onInspect?.()
   }
 
   /** Flood-fills the food patch near (x, y): total amount and centre. */
@@ -343,9 +352,29 @@ export class Engine {
   }
 
   paint(clientX: number, clientY: number, rect: DOMRect) {
-    const x = (((clientX - rect.left) / rect.width) * this.W) | 0
-    const y = (((clientY - rect.top) / rect.height) * this.H) | 0
-    if (this.tool === 'inspect') { this.inspect(x, y); return }
+    if (rect.width <= 0 || rect.height <= 0) return
+    const relX = clientX - rect.left
+    const relY = clientY - rect.top
+    if (relX < 0 || relX >= rect.width || relY < 0 || relY >= rect.height) {
+      if (this.tool === 'inspect') {
+        this.selected = null
+        this.onInspect?.()
+      }
+      return
+    }
+    const x = Math.floor((relX / rect.width) * this.W)
+    const y = Math.floor((relY / rect.height) * this.H)
+    if (x < 0 || x >= this.W || y < 0 || y >= this.H) {
+      if (this.tool === 'inspect') {
+        this.selected = null
+        this.onInspect?.()
+      }
+      return
+    }
+    if (this.tool === 'inspect') {
+      this.inspect(x, y)
+      return
+    }
     for (let dy = -2; dy <= 2; dy++)
       for (let dx = -2; dx <= 2; dx++) {
         if (dx * dx + dy * dy > 5) continue
