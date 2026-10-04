@@ -21,13 +21,13 @@ export function drawAnts(ctx: CanvasRenderingContext2D, ants: Ant[], S: number) 
   }
 
   for (const t of ants) {
-    c = Math.cos(t.a); s = Math.sin(t.a); x = t.x * S; y = t.y * S
-    blob(shadow, -2.7, 0, 3, 1.9, t.a, 1.2, 1.8)
-    blob(shadow, 1.2, 0, 2, 1.2, t.a, 1.2, 1.8)
-    blob(abdomen, -2.7, 0, 3, 1.9, t.a)
-    blob(sheen, -2.9, -0.5, 1.4, 0.6, t.a)
-    blob(thorax, 1.2, 0, 2, 1.2, t.a)
-    blob(head, 3.9, 0, 1.5, 1.3, t.a)
+    c = Math.cos(t.ra); s = Math.sin(t.ra); x = t.x * S; y = t.y * S
+    blob(shadow, -2.7, 0, 3, 1.9, t.ra, 1.2, 1.8)
+    blob(shadow, 1.2, 0, 2, 1.2, t.ra, 1.2, 1.8)
+    blob(abdomen, -2.7, 0, 3, 1.9, t.ra)
+    blob(sheen, -2.9, -0.5, 1.4, 0.6, t.ra)
+    blob(thorax, 1.2, 0, 2, 1.2, t.ra)
+    blob(head, 3.9, 0, 1.5, 1.3, t.ra)
 
     for (let i = 0; i < 3; i++)
       for (let k = 0; k < 2; k++) {

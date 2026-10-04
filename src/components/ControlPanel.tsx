@@ -77,7 +77,7 @@ export function ControlPanel({ engine }: { engine: Engine }) {
               <button onClick={() => engine.openShortcut()}>Open shortcut</button>
               <span>
                 {stats.shortcutShare === null
-                  ? 'Let a trail form around the wall first, then open a shorter gap.'
+                  ? 'Let a trail form around the wall first. Opening a shorter gap also fades most of the old trail, so you can watch the colony relearn.'
                   : `${stats.shortcutShare}% of crossings use the shortcut.`}
               </span>
             </div>

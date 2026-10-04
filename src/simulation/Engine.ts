@@ -111,7 +111,7 @@ export class Engine {
       for (let y = -4; y <= 4; y++)
         for (let x = -4; x <= 4; x++) {
           const i = (cy + y) * this.W + cx + x
-          if (x * x + y * y <= 16 && !this.wall[i]) this.food[i] = 30
+          if (x * x + y * y <= 16 && !this.wall[i]) this.food[i] = this.scenario.foodAmount ?? 30
         }
   }
 
@@ -256,7 +256,7 @@ export class Engine {
   /** Records a crossing of the scenario's wall column so we can see which gap ants use. */
   gateHit(y: number) {
     const sc = this.scenario.shortcut
-    if (sc && y >= sc[1] && y <= sc[3]) this.gate.shortcut++
+    if (sc && (y | 0) >= sc[1] && (y | 0) <= sc[3]) this.gate.shortcut++
     else this.gate.around++
   }
 

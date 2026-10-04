@@ -10,6 +10,7 @@ export class Ant {
   carrying = false
   strength = 1
   lost = 0
+  ra = this.a // smoothed heading, used only for drawing
   private previousX: number
   private roundTripDistance = 0
 
@@ -21,6 +22,7 @@ export class Ant {
     const { W, H, NX, NY, NR, wall, food, params: p } = w
     const wasCarrying = this.carrying
     const wasLost = this.lost > 0
+    this.ra += Math.atan2(Math.sin(this.a - this.ra), Math.cos(this.a - this.ra)) * 0.2
 
     // Lost ants temporarily ignore pheromones and goal sensing. They still
     // obey walls, so the event looks like exploration rather than teleporting.

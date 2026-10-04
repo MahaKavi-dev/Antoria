@@ -11,8 +11,13 @@ export function SimulationCanvas({ engine }: { engine: Engine }) {
     cv.height = engine.H * engine.S
     const ctx = cv.getContext('2d')!
     let raf = 0
-    const loop = () => {
-      engine.tick()
+    // Fixed timestep: the simulation always runs at 60 steps per second, whatever the screen refresh rate.
+    const STEP = 1000 / 60
+    let last = performance.now(), acc = 0
+    const loop = (now: number) => {
+      acc += Math.min(now - last, 100)
+      last = now
+      while (acc >= STEP) { engine.tick(); acc -= STEP }
       engine.draw(ctx)
       raf = requestAnimationFrame(loop)
     }
